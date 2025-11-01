@@ -6,14 +6,14 @@ import schemas
 
 
 def get_activity(db: Session, name: str) -> Daily_Activity | None:
-    """Get existing daily activity if it exists otherwise return None
+    """Get an activity by name
 
     Args:
-        db (Session): _description_
-        name (str): _description_
+        db (Session): database session to run query on
+        name (str): name of activity to query
 
     Returns:
-        Daily_Activity: model for activity
+        Daily_Activity | None: returns activity if found else None
     """
     activity = (
         db.query(Daily_Activity)
@@ -32,6 +32,15 @@ def get_activity(db: Session, name: str) -> Daily_Activity | None:
 def create_activity(
     db: Session, created_activity: schemas.DailyActivityCreate
 ) -> Daily_Activity:
+    """Create a new actiivty
+
+    Args:
+        db (Session): database session to run query on
+        created_activity (schemas.DailyActivityCreate): input data to create activity
+
+    Returns:
+        Daily_Activity: returns activity created
+    """
     activity = (
         db.query(Daily_Activity)
         .filter(and_(Daily_Activity.name == created_activity.name.lower()))
@@ -59,14 +68,10 @@ def add_in_activity(
 
     Args:
         db (Session): _description_
-        name (str): _description_
-        updated_activity (DailyActivityUpdate): _description
-        day (date): _description_
-        addition (int): _description_
-        notes (str, optional): _description_. Defaults to "".
+        updated_activity (schemas.DailyActivityUpdate): _description_
 
     Returns:
-        Daily_Activity: _description_
+        Daily_Activity | None: _description_
     """
     activity = (
         db.query(Daily_Activity)
@@ -87,6 +92,15 @@ def add_in_activity(
 
 
 def get_daily_acitivies(db: Session, days_back: int) -> list[Daily_Activity]:
+    """Get list of daily activities up to a amount of days back
+
+    Args:
+        db (Session): database session to run query on
+        days_back (int): amount of days to search back to
+
+    Returns:
+        list[Daily_Activity]: list of activities
+    """
     cutoff = date.today() - timedelta(days=days_back)
     return (
         db.query(Daily_Activity)
@@ -99,6 +113,16 @@ def get_daily_acitivies(db: Session, days_back: int) -> list[Daily_Activity]:
 def get_activity_summary(
     db: Session, activity_name: str
 ) -> list[Daily_Activity] | None:
+    """Get summary of activity
+    TODO: Change to gget graph of activity
+
+    Args:
+        db (Session): database session to run query on
+        activity_name (str): actvity name to query
+
+    Returns:
+        list[Daily_Activity] | None: returns activity list queried by name or none if none found.
+    """
     query = db.query(Daily_Activity)
     if activity_name:
         query = query.filter(Daily_Activity.name == activity_name.lower())
