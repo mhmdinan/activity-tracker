@@ -114,7 +114,7 @@ def get_activity_summary(
     db: Session, activity_name: str
 ) -> list[Daily_Activity] | None:
     """Get summary of activity
-    TODO: Change to gget graph of activity
+    TODO: Change to get graph of activity
 
     Args:
         db (Session): database session to run query on

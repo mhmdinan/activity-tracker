@@ -40,11 +40,19 @@ def add_in_activity_api(
     return JSONResponse(status_code=200, content=activity)
 
 
-@api.get("/get-daily-activites")
-def get_daily_acitivies_api(days_back: int, db: Session = Depends(get_db)):
+@api.get("/get-daily-activites/{days_back}")
+def get_daily_acitivies_api(days_back: int = 10, db: Session = Depends(get_db)):
     return JSONResponse(status_code=200, content=get_daily_acitivies(db, days_back))
 
 
-@api.get("/get-activity-summary/{days_back}")
-def get_activity_summary_api():
-    pass
+@api.get("/get-activity-summary/{activity_name}")
+def get_activity_summary_api(
+    activity_name: str,
+    db: Session = Depends(get_db)
+):
+    activity = get_activity_summary(db, activity_name)
+    if activity is None:
+        raise HTTPException(status_code=404, detail="activity not found")
+    return JSONResponse(status_code=200, content=activity)
+
+    
