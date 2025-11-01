@@ -52,13 +52,15 @@ def create_activity(
 
 
 def add_in_activity(
-    db: Session, name: str, day: date, addition: int, notes: str = ""
+    db: Session,
+    updated_activity: schemas.DailyActivityUpdate,
 ) -> Daily_Activity | None:
     """Add an integer value to activity, can be positive or negative.
 
     Args:
         db (Session): _description_
         name (str): _description_
+        updated_activity (DailyActivityUpdate): _description
         day (date): _description_
         addition (int): _description_
         notes (str, optional): _description_. Defaults to "".
@@ -68,18 +70,18 @@ def add_in_activity(
     """
     activity = (
         db.query(Daily_Activity)
-        .filter(and_(Daily_Activity.name == name.lower(), Daily_Activity.day == day))
+        .filter(and_(Daily_Activity.name == updated_activity.name.lower()))
         .first()
     )
 
     if activity:
-        activity.count += addition
-        if notes:
-            activity.notes = notes
-            activity.updated_at = datetime.now(timezone.utc)
-            db.commit()
-            db.refresh(activity)
-            return activity
+        activity.count += updated_activity.addition
+        if updated_activity.notes is not None:
+            activity.notes = updated_activity.notes
+        activity.updated_at = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(activity)
+        return activity
     else:
         return None
 
