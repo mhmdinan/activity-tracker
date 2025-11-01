@@ -2,47 +2,39 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_
 from models import Daily_Activity
 from datetime import date, datetime, timezone, timedelta
+import schemas
 
 
-def get_activity(
-    db: Session, name: str, day: date, count: int, notes: str = ""
-) -> Daily_Activity | None :
+def get_activity(db: Session, name: str) -> Daily_Activity | None:
     """Get existing daily activity if it exists otherwise return None
 
     Args:
         db (Session): _description_
         name (str): _description_
-        day (date): _description_
-        count (int): _description_
-        notes (str, optional): _description_. Defaults to "".
 
     Returns:
         Daily_Activity: model for activity
     """
     activity = (
         db.query(Daily_Activity)
-        .filter(and_(Daily_Activity.name == name.lower(), Daily_Activity.day == day))
+        .filter(and_(Daily_Activity.name == name.lower()))
         .first()
     )
 
     if activity:
         # Update existing activity if it exists
-        activity.count = count
-        activity.notes = notes
-        activity.updated_at = datetime.now(timezone.utc)
-        db.commit()
-        db.refresh(activity)
         return activity
     else:
         return None
         # If activity doesnt exist return None
 
+
 def create_activity(
-    db: Session, name: str, day: date, count: int, notes: str = ""
+    db: Session, created_activity: schemas.DailyActivityCreate
 ) -> Daily_Activity:
     activity = (
         db.query(Daily_Activity)
-        .filter(and_(Daily_Activity.name == name.lower(), Daily_Activity.day == day))
+        .filter(and_(Daily_Activity.name == created_activity.name.lower()))
         .first()
     )
     if activity:
@@ -51,12 +43,13 @@ def create_activity(
     else:
         # If activity doesnt exist create activity
         db_activity = Daily_Activity(
-            name=name.lower(), day=day, count=count, notes=notes
+            name=created_activity.name.lower(), count=0, notes=""
         )
         db.add(db_activity)
         db.commit()
         db.refresh(db_activity)
         return db_activity
+
 
 def add_in_activity(
     db: Session, name: str, day: date, addition: int, notes: str = ""

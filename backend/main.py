@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api import tracker_api
+from api import api
 from db import base, engine
 
 app = FastAPI()
@@ -11,5 +11,5 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-app.include_router(tracker_api)
+app.include_router(api, prefix="/api")
 base.metadata.create_all(bind=engine)
