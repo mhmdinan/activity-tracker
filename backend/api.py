@@ -14,30 +14,30 @@ from db import get_db
 api = APIRouter()
 
 
-@api.get("/get-activity/{activity_name}")
+@api.get("/get-activity/{activity_name}", response_model = schemas.DailyActivtyView)
 def get_activity_api(activity_name: str, db: Session = Depends(get_db)):
     activity = get_activity(db, activity_name)
     if activity is None:
         raise HTTPException(status_code=404, detail="activity not found")
-    return JSONResponse(status_code=200, content=activity)
+    return activity
 
 
-@api.post("create-activity")
+@api.post("create-activity", response_model = schemas.DailyActivtyView)
 def create_activity_api(
     activity: schemas.DailyActivityCreate, db: Session = Depends(get_db)
 ):
     activity = create_activity(db, activity)
-    return JSONResponse(status_code=200, content=activity)
+    return activity
 
 
-@api.post("/add-in-activity")
+@api.post("/add-in-activity", response_model = schemas.DailyActivtyView)
 def add_in_activity_api(
     updated_activity: schemas.DailyActivityUpdate, db: Session = Depends(get_db)
 ):
     activity = add_in_activity(db, updated_activity)
     if activity is None:
         raise HTTPException(status_code=404, detail="activity not found")
-    return JSONResponse(status_code=200, content=activity)
+    return activity
 
 
 @api.get("/get-daily-activites/{days_back}")

@@ -81,8 +81,6 @@ def add_in_activity(
 
     if activity:
         activity.count += updated_activity.addition
-        if updated_activity.notes is not None:
-            activity.notes = updated_activity.notes
         activity.updated_at = datetime.now(timezone.utc)
         db.commit()
         db.refresh(activity)

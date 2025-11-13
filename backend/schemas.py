@@ -8,11 +8,11 @@ class DailyActivityCreate(DailyActivityBase):
 
 class DailyActivityUpdate(DailyActivityBase):
     addition: int
-    notes: str | None = None
+    #notes: str | None = None
 
 class DailyActivtyView(DailyActivityCreate):
     id: int
     count: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
