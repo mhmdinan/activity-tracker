@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -12,7 +13,6 @@ import schemas
 from db import get_db
 
 api = APIRouter()
-
 
 @api.get("/get-activity/{activity_name}", response_model = schemas.DailyActivtyView)
 def get_activity_api(activity_name: str, db: Session = Depends(get_db)):
@@ -40,9 +40,9 @@ def add_in_activity_api(
     return activity
 
 
-@api.get("/get-daily-activites/{days_back}")
+@api.get("/get-daily-activites/{days_back}", response_model=List[schemas.DailyActivtyView])
 def get_daily_acitivies_api(days_back: int = 10, db: Session = Depends(get_db)):
-    return JSONResponse(status_code=200, content=get_daily_acitivies(db, days_back))
+    return get_daily_acitivies(db, days_back)
 
 
 @api.get("/get-activity-summary/{activity_name}")
@@ -54,5 +54,3 @@ def get_activity_summary_api(
     if activity is None:
         raise HTTPException(status_code=404, detail="activity not found")
     return JSONResponse(status_code=200, content=activity)
-
-    

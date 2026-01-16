@@ -1,25 +1,26 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from db import base
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import DateTime
-from sqlalchemy.sql import func
-
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey, UniqueConstraint
+from typing import List
 
 class Daily_Activity(base):
     __tablename__ = "activity"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(nullable=False)
+    description: Mapped[str] = mapped_column(nullable=True)
     count: Mapped[int] = mapped_column(nullable=False)
-    day: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
-    notes: Mapped[str] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.now(timezone.utc)
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.now(timezone.utc),
-        onupdate=datetime.now(timezone.utc),
-    )
+    logs: Mapped[List["Daily_Log"]] = relationship(back_populates="activity")
+
+class Daily_Log(base):
+    __tablename__ = "daily_logs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    activity_id: Mapped[int] = mapped_column(ForeignKey("activity.id"))
+    count: Mapped[int] = mapped_column(default=0)
+    date: Mapped[datetime] = mapped_column(default=datetime.today)
+    
+    activity: Mapped["Daily_Activity"] = relationship(back_populates="logs")
+    
+    __table_args__ = (UniqueConstraint('activity_id', 'date', name='_activity_date_uc'),)
