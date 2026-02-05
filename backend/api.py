@@ -6,15 +6,17 @@ from crud import (
     get_activity,
     create_activity,
     add_in_activity,
+    get_activity_data,
+    get_activity_plot,
     get_daily_acitivies,
-    get_activity_summary,
 )
 import schemas
 from db import get_db
 
 api = APIRouter()
 
-@api.get("/get-activity/{activity_name}", response_model = schemas.DailyActivtyView)
+
+@api.get("/get-activity/{activity_name}", response_model=schemas.DailyActivtyView)
 def get_activity_api(activity_name: str, db: Session = Depends(get_db)):
     activity = get_activity(db, activity_name)
     if activity is None:
@@ -22,7 +24,7 @@ def get_activity_api(activity_name: str, db: Session = Depends(get_db)):
     return activity
 
 
-@api.post("create-activity", response_model = schemas.DailyActivtyView)
+@api.post("/create-activity", response_model=schemas.DailyActivtyView)
 def create_activity_api(
     activity: schemas.DailyActivityCreate, db: Session = Depends(get_db)
 ):
@@ -30,7 +32,7 @@ def create_activity_api(
     return activity
 
 
-@api.post("/add-in-activity", response_model = schemas.DailyActivtyView)
+@api.post("/add-in-activity")
 def add_in_activity_api(
     updated_activity: schemas.DailyActivityUpdate, db: Session = Depends(get_db)
 ):
@@ -40,17 +42,30 @@ def add_in_activity_api(
     return activity
 
 
-@api.get("/get-daily-activites/{days_back}", response_model=List[schemas.DailyActivtyView])
-def get_daily_acitivies_api(days_back: int = 10, db: Session = Depends(get_db)):
-    return get_daily_acitivies(db, days_back)
+@api.get(
+    "/get-daily-activites", response_model=List[schemas.DailyActivtyView]
+)
+def get_daily_acitivies_api(skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
+    return get_daily_acitivies(db, skip, limit)
 
 
-@api.get("/get-activity-summary/{activity_name}")
-def get_activity_summary_api(
-    activity_name: str,
-    db: Session = Depends(get_db)
+@api.get("/get-activity-data/{activity_name}")
+def get_activity_data_api(
+    activity_name: str, day_count: int , db: Session = Depends(get_db)
 ):
-    activity = get_activity_summary(db, activity_name)
+    activity = get_activity_data(db, activity_name, day_count)
     if activity is None:
         raise HTTPException(status_code=404, detail="activity not found")
     return JSONResponse(status_code=200, content=activity)
+
+@api.get("/get-activity-plot/{activity_name}")
+def get_activity_plot_api(
+    activity_name: str, day_count: int, db: Session = Depends(get_db)
+):
+    image_data = get_activity_plot(db, activity_name, day_count)
+    if image_data is None:
+        raise HTTPException()
+    return {
+        "activity": activity_name,
+        "image": f"data:image/png;base64,{image_data}"
+    }

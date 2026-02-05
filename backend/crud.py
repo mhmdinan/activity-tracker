@@ -1,6 +1,5 @@
 import base64
 import io
-from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from models import Daily_Activity, Daily_Log
@@ -11,7 +10,7 @@ import matplotlib.pyplot as plt
 
 def get_activity(db: Session, name: str) -> Daily_Activity | None:
     activity = (
-        db.query(Daily_Activity).filter(Daily_Activity.name == name.lower()).first()
+        db.query(Daily_Activity).filter(Daily_Activity.name == name.lower()).one_or_none()
     )
     if activity:
         return activity
@@ -25,12 +24,12 @@ def create_activity(
     activity = (
         db.query(Daily_Activity)
         .filter(Daily_Activity.name == created_activity.name.lower())
-        .first()
+        .one_or_none()
     )
     if activity:
         return activity
     else:
-        db_activity = Daily_Activity(name=created_activity.name.lower(), goal=0)
+        db_activity = Daily_Activity(name=created_activity.name.lower(), goal=created_activity.goal)
         db.add(db_activity)
         db.commit()
         db.refresh(db_activity)
@@ -40,21 +39,22 @@ def create_activity(
 def add_in_activity(
     db: Session,
     updated_activity: schemas.DailyActivityUpdate,
-) -> Daily_Activity | None:
+):
     activity = (
         db.query(Daily_Activity)
         .filter(Daily_Activity.name == updated_activity.name.lower())
-        .first()
+        .one_or_none()
     )
 
     if activity:
         daily_log = (
             db.query(Daily_Log)
+            .join(Daily_Activity)
             .filter(
-                Daily_Log.activity == Daily_Activity,
+                Daily_Log.activity == activity,
                 func.date(Daily_Log.date) == date.today(),
             )
-            .first()
+            .one_or_none()
         )
         if daily_log:
             daily_log.count = daily_log.count + updated_activity.addition
@@ -98,7 +98,7 @@ def get_activity_data(
 def get_activity_plot(db: Session, activity_name: str, day_count: int):
     logs = get_activity_data(db, activity_name, day_count)
     if not logs:
-        raise HTTPException(status_code=404, detail="No data found for this activity")
+        return None
     dates = [log.date.strftime("%Y-%m-%d") for log in logs]
     counts = [log.count for log in logs]
 
@@ -116,5 +116,5 @@ def get_activity_plot(db: Session, activity_name: str, day_count: int):
     plt.close()
     buffer.seek(0)
 
-    base64_img = base64.b64encode(buffer.read()).decode('uts-8')
+    base64_img = base64.b64encode(buffer.read()).decode('utf-8')
     return base64_img

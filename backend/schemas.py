@@ -5,6 +5,7 @@ class DailyActivityBase(BaseModel):
 
 class DailyActivityCreate(DailyActivityBase):
     notes: str = ""
+    goal: int
 
 class DailyActivityUpdate(DailyActivityBase):
     addition: int
@@ -14,3 +15,4 @@ class DailyActivtyView(DailyActivityCreate):
     goal: int
 
     model_config = ConfigDict(from_attributes = True)
+

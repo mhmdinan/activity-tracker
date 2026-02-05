@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import date as dt
 from db import base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, Date
 from typing import List
 
 class Daily_Activity(base):
@@ -19,6 +19,6 @@ class Daily_Log(base):
     id: Mapped[int] = mapped_column(primary_key=True)
     activity_id: Mapped[int] = mapped_column(ForeignKey("activity.id"))
     count: Mapped[int] = mapped_column(default=0)
-    date: Mapped[datetime] = mapped_column(default=datetime.today)
+    date: Mapped[dt] = mapped_column(Date, default=dt.today)
     activity: Mapped["Daily_Activity"] = relationship(back_populates="logs")
 
