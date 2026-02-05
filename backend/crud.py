@@ -2,7 +2,7 @@ import base64
 import io
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import RootTransaction, func
+from sqlalchemy import func
 from models import Daily_Activity, Daily_Log
 from datetime import date
 import schemas
