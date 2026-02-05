@@ -42,7 +42,7 @@ def add_in_activity(
 ):
     activity = (
         db.query(Daily_Activity)
-        .filter(Daily_Activity.name == updated_activity.name.lower())
+        .filter(Daily_Activity.name == updated_activity.activity_name.lower())
         .one_or_none()
     )
 

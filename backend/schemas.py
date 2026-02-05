@@ -7,7 +7,8 @@ class DailyActivityCreate(DailyActivityBase):
     notes: str = ""
     goal: int
 
-class DailyActivityUpdate(DailyActivityBase):
+class DailyActivityUpdate(BaseModel):
+    activity_name: str
     addition: int
 
 class DailyActivtyView(DailyActivityCreate):

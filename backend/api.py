@@ -43,7 +43,7 @@ def add_in_activity_api(
 
 
 @api.get(
-    "/get-daily-activites", response_model=List[schemas.DailyActivtyView]
+    "/get-daily-activities", response_model=List[schemas.DailyActivtyView]
 )
 def get_daily_acitivies_api(skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
     return get_daily_acitivies(db, skip, limit)
@@ -64,7 +64,7 @@ def get_activity_plot_api(
 ):
     image_data = get_activity_plot(db, activity_name, day_count)
     if image_data is None:
-        raise HTTPException()
+        raise HTTPException(status_code=404, detail='No data for activity exists')
     return {
         "activity": activity_name,
         "image": f"data:image/png;base64,{image_data}"
