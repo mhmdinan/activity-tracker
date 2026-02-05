@@ -8,10 +8,9 @@ class DailyActivityCreate(DailyActivityBase):
 
 class DailyActivityUpdate(DailyActivityBase):
     addition: int
-    #notes: str | None = None
 
 class DailyActivtyView(DailyActivityCreate):
     id: int
-    count: int
+    goal: int
 
     model_config = ConfigDict(from_attributes = True)

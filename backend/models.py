@@ -1,7 +1,7 @@
 from datetime import datetime
 from db import base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, UniqueConstraint
+from sqlalchemy import ForeignKey
 from typing import List
 
 class Daily_Activity(base):
@@ -20,7 +20,5 @@ class Daily_Log(base):
     activity_id: Mapped[int] = mapped_column(ForeignKey("activity.id"))
     count: Mapped[int] = mapped_column(default=0)
     date: Mapped[datetime] = mapped_column(default=datetime.today)
-    
     activity: Mapped["Daily_Activity"] = relationship(back_populates="logs")
-    
-    __table_args__ = (UniqueConstraint('activity_id', 'date', name='_activity_date_uc'),)
+

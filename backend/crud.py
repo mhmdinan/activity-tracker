@@ -1,59 +1,36 @@
+import base64
+import io
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
-from models import Daily_Activity
-from datetime import date, datetime, timezone, timedelta
+from sqlalchemy import RootTransaction, func
+from models import Daily_Activity, Daily_Log
+from datetime import date
 import schemas
+import matplotlib.pyplot as plt
 
 
 def get_activity(db: Session, name: str) -> Daily_Activity | None:
-    """Get an activity by name
-
-    Args:
-        db (Session): database session to run query on
-        name (str): name of activity to query
-
-    Returns:
-        Daily_Activity | None: returns activity if found else None
-    """
     activity = (
-        db.query(Daily_Activity)
-        .filter(and_(Daily_Activity.name == name.lower()))
-        .first()
+        db.query(Daily_Activity).filter(Daily_Activity.name == name.lower()).first()
     )
-
     if activity:
-        # Update existing activity if it exists
         return activity
     else:
         return None
-        # If activity doesnt exist return None
 
 
 def create_activity(
     db: Session, created_activity: schemas.DailyActivityCreate
 ) -> Daily_Activity:
-    """Create a new actiivty
-
-    Args:
-        db (Session): database session to run query on
-        created_activity (schemas.DailyActivityCreate): input data to create activity
-
-    Returns:
-        Daily_Activity: returns activity created
-    """
     activity = (
         db.query(Daily_Activity)
-        .filter(and_(Daily_Activity.name == created_activity.name.lower()))
+        .filter(Daily_Activity.name == created_activity.name.lower())
         .first()
     )
     if activity:
-        # Return activity if it already exists
         return activity
     else:
-        # If activity doesnt exist create activity
-        db_activity = Daily_Activity(
-            name=created_activity.name.lower(), count=0, notes=""
-        )
+        db_activity = Daily_Activity(name=created_activity.name.lower(), goal=0)
         db.add(db_activity)
         db.commit()
         db.refresh(db_activity)
@@ -64,66 +41,80 @@ def add_in_activity(
     db: Session,
     updated_activity: schemas.DailyActivityUpdate,
 ) -> Daily_Activity | None:
-    """Add an integer value to activity, can be positive or negative.
-
-    Args:
-        db (Session): _description_
-        updated_activity (schemas.DailyActivityUpdate): _description_
-
-    Returns:
-        Daily_Activity | None: _description_
-    """
     activity = (
         db.query(Daily_Activity)
-        .filter(and_(Daily_Activity.name == updated_activity.name.lower()))
+        .filter(Daily_Activity.name == updated_activity.name.lower())
         .first()
     )
 
     if activity:
-        activity.count += updated_activity.addition
-        activity.updated_at = datetime.now(timezone.utc)
-        db.commit()
-        db.refresh(activity)
-        return activity
+        daily_log = (
+            db.query(Daily_Log)
+            .filter(
+                Daily_Log.activity == Daily_Activity,
+                func.date(Daily_Log.date) == date.today(),
+            )
+            .first()
+        )
+        if daily_log:
+            daily_log.count = daily_log.count + updated_activity.addition
+            db.commit()
+            db.refresh(daily_log)
+            return daily_log
+        else:
+            daily_log = Daily_Log(
+                activity_id=activity.id,
+                count=updated_activity.addition,
+                date=date.today(),
+            )
+            db.add(daily_log)
+            db.commit()
+            db.refresh(daily_log)
+            return daily_log
     else:
         return None
 
 
-def get_daily_acitivies(db: Session, days_back: int) -> list[Daily_Activity]:
-    """Get list of daily activities up to a amount of days back
+def get_daily_acitivies(
+    db: Session, skip: int = 0, limit: int = 20
+) -> list[Daily_Activity]:
+    return db.query(Daily_Activity).offset(skip).limit(limit)
 
-    Args:
-        db (Session): database session to run query on
-        days_back (int): amount of days to search back to
 
-    Returns:
-        list[Daily_Activity]: list of activities
-    """
-    cutoff = date.today() - timedelta(days=days_back)
-    return (
-        db.query(Daily_Activity)
-        .filter(Daily_Activity.day >= cutoff)
-        .order_by(Daily_Activity.day.desc(), Daily_Activity.name)
+def get_activity_data(
+    db: Session, activity_name: str, day_count: int
+) -> list[Daily_Log]:
+    activity_data = (
+        db.query(Daily_Log)
+        .join(Daily_Activity)
+        .where(Daily_Activity.name == activity_name.lower())
+        .order_by(Daily_Log.date.desc())
+        .limit(day_count)
         .all()
     )
+    return activity_data
 
 
-def get_activity_summary(
-    db: Session, activity_name: str
-) -> list[Daily_Activity] | None:
-    """Get summary of activity
-    TODO: Change to get graph of activity
+def get_activity_plot(db: Session, activity_name: str, day_count: int):
+    logs = get_activity_data(db, activity_name, day_count)
+    if not logs:
+        raise HTTPException(status_code=404, detail="No data found for this activity")
+    dates = [log.date.strftime("%Y-%m-%d") for log in logs]
+    counts = [log.count for log in logs]
 
-    Args:
-        db (Session): database session to run query on
-        activity_name (str): actvity name to query
+    plt.figure(figsize=(10, 5))
+    plt.plot(dates, counts, marker="o", linestyle="-", color="#4f46e5")
 
-    Returns:
-        list[Daily_Activity] | None: returns activity list queried by name or none if none found.
-    """
-    query = db.query(Daily_Activity)
-    if activity_name:
-        query = query.filter(Daily_Activity.name == activity_name.lower())
-        return query.order_by(Daily_Activity).all()
-    else:
-        return None
+    plt.title(f"Activity: {activity_name} (Last {len(logs)} entries)")
+    plt.xlabel("Date")
+    plt.ylabel("Count")
+    plt.xticks(rotation = 45)
+    plt.grid(True, linestyle="--", alpha=0.7)
+
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format="png")
+    plt.close()
+    buffer.seek(0)
+
+    base64_img = base64.b64encode(buffer.read()).decode('uts-8')
+    return base64_img
