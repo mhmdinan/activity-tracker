@@ -110,7 +110,7 @@ def get_activity_plot(db: Session, activity_name: str, day_count: int):
     plt.title(f"Activity: {activity_name} (Last {len(logs)} entries)")
     plt.xlabel("Date")
     plt.ylabel("Count")
-    plt.xticks(rotation = 45)
+    #plt.xticks(rotation = 45)
     plt.grid(True, linestyle="--", alpha=0.7)
 
     buffer = io.BytesIO()
