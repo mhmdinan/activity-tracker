@@ -99,6 +99,8 @@ def get_activity_plot(db: Session, activity_name: str, day_count: int):
     logs = get_activity_data(db, activity_name, day_count)
     if not logs:
         return None
+    
+    logs.reverse()
     dates = [log.date.strftime("%Y-%m-%d") for log in logs]
     counts = [log.count for log in logs]
 
