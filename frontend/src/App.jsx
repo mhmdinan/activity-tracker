@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { fetchActivities, getActivityPlot, logActivity } from "./api";
-import { Activity, BarChart3, PlusCircle, Plus} from 'lucide-react';
+import { createActivity, fetchActivities, getActivityPlot, logActivity } from "./api";
+import { Activity, BarChart3, PlusCircle, Plus } from 'lucide-react';
 
 
 export default function App() {
@@ -8,6 +8,9 @@ export default function App() {
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [graphBase64, setGraphBase64] = useState("");
   const [inputCount, setInputCount] = useState(0);
+  const [inputActivityName, setNewActivityName] = useState("");
+  const [inputActivityGoal, setNewActivityGoal] = useState(0);
+  const [inputActivityNotes, setNewActivityNotes] = useState("");
 
   useEffect(() => {
     loadActivities();
@@ -15,7 +18,6 @@ export default function App() {
 
   const loadActivities = async () => {
     const res = await fetchActivities(0, 20);
-    console.log("Data from API: ", res.data);
     setActivities(res.data);
   }
 
@@ -31,6 +33,19 @@ export default function App() {
     setGraphBase64(res.data.image);
   };
 
+  const sendNewActivity = async () => {
+    const trimmedName = inputActivityName.trim();
+    const trimmedGoal = inputActivityGoal;
+    const trimmedNotes = inputActivityNotes?.trim() || "";
+    await createActivity({ name: trimmedName, goal: trimmedGoal, notes: trimmedNotes });
+    alert("Added new activity")
+    loadActivities();
+    setNewActivityName("");
+    setNewActivityGoal(0);
+    setNewActivityNotes("");
+  }
+
+
   return (
     <div className="min-h-screen bg-gray-50 p-8 font-sans">
       <header className="mb-8 border-b pb-4">
@@ -42,46 +57,78 @@ export default function App() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <section className="space-y-6">
           <h2 className="text-xl font-semibold flex items-center gap-2">
-            <PlusCircle size={20}/> Log Activity
+            <PlusCircle size={20} /> Log Activity
           </h2>
 
           <div className="bg-white p-6 rounded-xl shadow-sm border">
-            <input 
-            type="number"
-            placeholder="Amount (e.g. 10)"
-            className="border rounded p-2 mr-2"
-            onChange={(e) => setInputCount(Number(e.target.value))}
+            <input
+              type="number"
+              placeholder="Amount (e.g. 10)"
+              className="border rounded p-2 mr-2"
+              onChange={(e) => setInputCount(Number(e.target.value))}
             />
             <div className="mt-4 grid grid-cols-2 gap-2">
               {activities?.map(act => (
                 <button
-                key={act.id}
-                onClick={() => handleLog(act.name)}
-                className="bg-indigo-50 text-indigo-700 p-2 rounded hover:bg-indigo-100 transition"
+                  key={act.id}
+                  onClick={() => handleLog(act.name)}
+                  className="bg-indigo-50 text-indigo-700 p-2 rounded hover:bg-indigo-100 transition"
                 >
                   + {act.name}
                 </button>
               ))}
             </div>
           </div>
+          <div>
+            <h2>Add new acitivity</h2>
+            <div className="p-6 border rounded-xl space-y-4">
+              <input
+                type="text"
+                placeholder="Enter new activity"
+                className="w-full border rounded-lg px-4 p-2 mr-2"
+                onChange={(e) => setNewActivityName(e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="Goal (e.g 50 per day)"
+                className="w-full border rounded-lg p-2 mr-2"
+                onChange={(e) => setNewActivityGoal(e.target.value)}
+              />
+              <textarea
+                type="text"
+                placeholder="Enter new activity notes"
+                className="w-full border rounded-lg p-2 mr-2"
+                rows={2}
+                onChange={(e) => setNewActivityNotes(e.target.value)}
+              />
+              <div className="mt-4">
+                <button
+                  onClick={() => sendNewActivity()}
+                  className="bg-indigo-50 text-indigo-700 p-2 rounded border hover:bg-indigo-100 transition"
+                >
+                  Add activity
+                </button>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section className="space-y-6">
           <h2 className="text-xl font-semibold flex items-center gap-2">
-            <BarChart3 size={20}/>Analytics
-            </h2>
+            <BarChart3 size={20} />Analytics
+          </h2>
           <div className="bg-white p-6 rounded-xl shadow-sm border min-h-[300px] flex flex-col items-center justify-center">
             {graphBase64 ? (
-              <img src={graphBase64} alt="Progress Graph" className="w-full rounded"/>
+              <img src={graphBase64} alt="Progress Graph" className="w-full rounded" />
             ) : (
               <p className="text-gray-400">Select an activty from the list to view progress</p>
             )}
             <div className="mt-4 flex gap-2">
               {activities?.map(act => (
                 <button
-                key={act.id}
-                onClick={() => loadGraph(act.name)}
-                className={`px-3 py-1 rounded-full text-sm ${selectedActivity === act.name ? 'bg-indigo-600 text-white' : 'bg-gray-200'}`}
+                  key={act.id}
+                  onClick={() => loadGraph(act.name)}
+                  className={`px-3 py-1 rounded-full text-sm ${selectedActivity === act.name ? 'bg-indigo-600 text-white' : 'bg-gray-200'}`}
                 >
                   {act.name}
                 </button>
