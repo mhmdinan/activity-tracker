@@ -9,3 +9,4 @@
 - [ ] Make env file default to postgres db or managed db
 - [ ] Make API to return single activity details
 - [ ] Shift Graph creation to frontend
+- [ ] Make dockerfile
