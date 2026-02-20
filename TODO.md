@@ -5,3 +5,7 @@
 - [X] add create activity functionality to frontend
 - [ ] make it so that you select activity and then its number in add column
 - [X] Shift orientation of graph so newest date appears on right
+- [ ] Add Env file.
+- [ ] Make env file default to postgres db or managed db
+- [ ] Make API to return single activity details
+- [ ] Shift Graph creation to frontend
